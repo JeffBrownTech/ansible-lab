@@ -16,9 +16,11 @@
     "variables": {
         "vnetName": "vnet-192-168-0-0",
         "vnetPrefix": "192.168.0.0/16",
-        "subnetName": "subnet0",
+        "subnet0Name": "subnet0",
         "subnetPrefix": "192.168.0.0/24",
-        "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('subnetName'))]",
+        "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('subnet0Name'))]",
+        "allow_SSH-nsg": "allow_SSH-nsg",
+        "default-nsg": "default-nsg",
         "vmSize": "Standard_B1s",
         "ansibleVmName": "ansiblecontrol",
         "ansibleNic": "[concat(variables('ansibleVmName'), '-nic')]",
@@ -46,7 +48,7 @@
 
                 "subnets": [
                     {
-                        "name": "[variables('subnetName')]",
+                        "name": "[variables('subnet0Name')]",
                         "properties": {
                             "addressPrefix": "[variables('subnetPrefix')]"
                         }
@@ -92,7 +94,11 @@
                             }
                         }
                     }
-                ]
+                ],
+
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('allow_SSH-nsg'))]"
+                }
             }
         },
 
@@ -115,7 +121,11 @@
                             "privateIPAllocationMethod": "Dynamic"
                         }
                     }
-                ]
+                ],
+
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('default-nsg'))]"
+                }
             }
         },
 
@@ -138,7 +148,49 @@
                             "privateIPAllocationMethod": "Dynamic"
                         }
                     }
+                ],
+
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('default-nsg'))]"
+                }
+            }
+        },
+
+        {
+            "name": "[variables('allow_SSH-nsg')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-05-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "Port22_SSH",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "Internet",
+                            "destinationAddressPrefix": "VirtualNetwork",
+                            "access": "Allow",
+                            "priority": 150,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    }
                 ]
+            }
+        },
+
+        {
+            "name": "[variables('default-nsg')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-05-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [ ]
             }
         },
 
