@@ -9,8 +9,7 @@
         },
 
         "vmAdminPassword": {
-            "type": "securestring",
-            "defaultValue": "P@ssw0rd2020!"
+            "type": "securestring"
         }
     },
 
