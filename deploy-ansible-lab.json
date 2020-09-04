@@ -9,7 +9,8 @@
         },
 
         "vmAdminPassword": {
-            "type": "securestring"
+            "type": "securestring",
+            "defaultValue": "P@ssw0rd2020!"
         }
     },
 
@@ -25,11 +26,7 @@
         "ansibleVmName": "ansiblecontrol",
         "ansibleNic": "[concat(variables('ansibleVmName'), '-nic')]",
         "ansiblePIP": "[concat(variables('ansibleVmName'), '-pip')]",
-        "linuxVmName": "linux01",
-        "linuxNic": "[concat(variables('linuxVmName'), '-nic')]",
-        "winVmName": "win01",
-        "winNic": "[concat(variables('winVmName'), '-nic')]",
-        "winOSVersion": "2016-Datacenter",
+        "linuxVmName": "linux",
         "osDiskType": "Premium_LRS"
     },
 
@@ -103,40 +100,17 @@
         },
 
         {
-            "name": "[variables('linuxNic')]",
+            "name": "[concat(variables('linuxVmName'), copyIndex(), '-nic')]",
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2017-09-01",
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
             ],
-            "properties": {
-                "ipConfigurations": [
-                    {
-                        "name": "ipconfig1",
-                        "properties": {
-                            "subnet": {
-                                "id": "[variables('subnetRef')]"
-                            },
-                            "privateIPAllocationMethod": "Dynamic"
-                        }
-                    }
-                ],
-
-                "networkSecurityGroup": {
-                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('default-nsg'))]"
-                }
-            }
-        },
-
-        {
-            "name": "[variables('winNic')]",
-            "type": "Microsoft.Network/networkInterfaces",
-            "apiVersion": "2017-09-01",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
-            ],
+            "copy": {
+                "name": "linuxNicCopy",
+                "count": 3
+            },
             "properties": {
                 "ipConfigurations": [
                     {
@@ -240,13 +214,17 @@
         },
 
         {
-            "name": "[variables('linuxVmName')]",
+            "name": "[concat(variables('linuxVmName'), copyIndex())]",
             "type": "Microsoft.Compute/virtualMachines",
             "apiVersion": "2019-03-01",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/networkInterfaces', variables('linuxNic'))]"
+                "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('linuxVmName'), copyIndex(), '-nic'))]"
             ],
+            "copy": {
+                "name": "linuxVmCopy",
+                "count": 3
+            },
             "properties": {
                 "hardwareProfile": {
                     "vmSize": "[variables('vmSize')]"
@@ -271,57 +249,13 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('linuxNic'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('linuxVmName'), copyIndex(), '-nic'))]"
                         }
                     ]
                 },
 
                 "osProfile": {
-                    "computerName": "[variables('ansibleVmName')]",
-                    "adminUsername": "[parameters('vmAdminName')]",
-                    "adminPassword": "[parameters('vmAdminPassword')]"
-                }
-            }
-        },
-
-        {
-            "name": "[variables('winVmName')]",
-            "type": "Microsoft.Compute/virtualMachines",
-            "apiVersion": "2019-03-01",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/networkInterfaces', variables('winNic'))]"
-            ],
-            "properties": {
-                "hardwareProfile": {
-                    "vmSize": "[variables('vmSize')]"
-                },
-
-                "storageProfile": {
-                    "osDisk": {
-                        "createOption": "fromImage",
-                        "managedDisk": {
-                            "storageAccountType": "[variables('osDiskType')]"
-                        }
-                    },
-                    "imageReference": {
-                        "publisher": "MicrosoftWindowsServer",
-                        "offer": "WindowsServer",
-                        "sku": "[variables('winOSVersion')]",
-                        "version": "latest"
-                    }
-                },
-
-                "networkProfile": {
-                    "networkInterfaces": [
-                        {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('winNic'))]"
-                        }
-                    ]
-                },
-
-                "osProfile": {
-                    "computerName": "[variables('ansibleVmName')]",
+                    "computerName": "[concat(variables('linuxVmName'), copyIndex())]",
                     "adminUsername": "[parameters('vmAdminName')]",
                     "adminPassword": "[parameters('vmAdminPassword')]"
                 }
