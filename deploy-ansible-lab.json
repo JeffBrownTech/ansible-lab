@@ -260,5 +260,12 @@
                 }
             }
         }
-    ]
+    ],
+
+    "outputs": {
+       "connectionString": {
+           "type": "string",
+           "value": "[concat('ssh ', parameters('vmAdminName'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses', variables('ansiblePIP')).publicIPAddress))]"
+       }
+    }
 }
