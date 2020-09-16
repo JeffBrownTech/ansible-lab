@@ -265,7 +265,7 @@
     "outputs": {
        "connectionString": {
            "type": "string",
-           "value": "[concat('ssh ', parameters('vmAdminName'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses', variables('ansiblePIP')).ipAddress))]"
+           "value": "[concat('ssh ', parameters('vmAdminName'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses', variables('ansiblePIP'))).ipAddress)]"
        }
     }
 }
